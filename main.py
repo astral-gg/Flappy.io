@@ -17,7 +17,7 @@ pg.init()
 class Game():
 	
 	def __init__(self):
-		self.display = pg.display.set_mode()
+		self.display = pg.display.set_mode((540,1080), pg.FULLSCREEN | pg.HWSURFACE | pg.DOUBLEBUF)
 		self.width, self.height = self.display.get_size()
 		self.clock = pg.time.Clock()
 		
@@ -49,6 +49,7 @@ class Game():
 		last_pipe_spawn = 0
 		pipe_group = pg.sprite.Group()
 		pipes = Pipes(pipe_gap, self.base.rect.y, self.player, self.pipe_base_dx)
+		#last_pipe_spawn = pg.time.get_ticks()
 		
 		# Game Loop
 		while True:
@@ -101,12 +102,12 @@ class Game():
 					self.player.flap = True
 				
 				if event.type == pg.FINGERDOWN and self.player.touching_ground:
+					self.display.fill("black")
 					print(self.player.score)
 					pipe_group.empty()
 					self.player.reset(self.player_pos)
 					Pipes.pipe_count = 0
-					background = ScrollingLayer(pathA="background-day.png", pathB="background-night.png",x=0,y=-self.height*0.28,dx=1,background=True)
-				
+					
 			# Draw Logic
 			pipe_group.draw(self.display)
 			self.player.update()

@@ -16,19 +16,34 @@ class Pipes(pg.sprite.Sprite):
 	# Pipe Counts
 	pipe_count = 0
 	
+	_green_pipe = None
+	_green_pipe_inverted = None
+	_red_pipe = None
+	_red_pipe_inverted = None
+	
+	@classmethod
+	def _cache_images(cls):
+		if cls._green_pipe is None:
+			cls._green_pipe = load_img("pipe-green.png").convert_alpha()
+			cls._green_pipe_inverted = pg.transform.flip(cls._green_pipe.copy(), False, True)
+			
+			cls._red_pipe = load_img("pipe-red.png").convert_alpha()
+			cls._red_pipe_inverted = pg.transform.flip(cls._red_pipe.copy(), False, True)
+	
 	def __init__(self, pipe_gap, ground, player, dx):
 		super().__init__()
+		
+		Pipes._cache_images()
 		
 		# Get Display
 		self.display = pg.display.get_surface()
 		self.screen_width, self.screen_height = self.display.get_size()
 		
 		# Load pipes
-		self.green_pipe = load_img("pipe-green.png").convert_alpha()
-		self.green_pipe_inverted = pg.transform.flip(self.green_pipe.copy(), False, True)
-		
-		self.red_pipe = load_img("pipe-red.png").convert_alpha()
-		self.red_pipe_inverted = pg.transform.flip(self.red_pipe.copy(), False, True)
+		self.green_pipe = Pipes._green_pipe
+		self.green_pipe_inverted = Pipes._green_pipe_inverted
+		self.red_pipe = Pipes._red_pipe
+		self.red_pipe_inverted = Pipes._red_pipe_inverted
 		
 		# Creating the Master-Surface
 		self.surface = pg.Surface((self.green_pipe.get_width(),ground))
@@ -37,7 +52,7 @@ class Pipes(pg.sprite.Sprite):
 		self.surface_rect = self.surface.get_rect(topleft=(self.screen_width,0))
 		
 		# Creating Gap-surface
-		self.gap_surface = pg.Surface((self.green_pipe.get_width(),pipe_gap))
+		self.gap_surface = pg.Surface((self.green_pipe.get_width(),pipe_gap)).convert()
 		self.gap_surface.fill("white")
 		self.gap_surface.set_colorkey("white")
 		self.gap_surface_rect = self.gap_surface.get_rect(topleft=(0,random.randint(pipe_gap//2, self.surface.get_height()-pipe_gap)))
@@ -62,7 +77,7 @@ class Pipes(pg.sprite.Sprite):
 		# Movement Speed
 		self.dx = dx * config.scale.factor_x
 		
-		self.image = self.surface
+		self.image = self.surface.convert_alpha()
 		self.rect = self.surface_rect
 		
 		self.awarded = False
