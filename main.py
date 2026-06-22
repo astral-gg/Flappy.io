@@ -5,7 +5,6 @@ import sys
 import os
 
 # Game Related Imports 
-# NOTE: Player class will be omitted as import as it will inherited
 from player import Player
 from pipes import Pipes
 from scrollinglayer import ScrollingLayer
