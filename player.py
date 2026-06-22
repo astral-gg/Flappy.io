@@ -54,10 +54,11 @@ class Player(pg.sprite.Sprite):
 		self.rect = self.image.get_rect(center=self.pos)
 		
 		# Sounds
-		self.hit = pg.mixer.Sound("assets/audio/hit.ogg")
-		self.die = pg.mixer.Sound("assets/audio/die.ogg")
-		self.point = pg.mixer.Sound("assets/audio/point.ogg")
-		self.wing = pg.mixer.Sound("assets/audio/wing.ogg")
+		base_path = os.path.dirname(os.path.abspath(__file__))
+		self.hit = pg.mixer.Sound(os.path.join(base_path, "assets/audio/hit.ogg"))
+		self.die = pg.mixer.Sound(os.path.join(base_path, "assets/audio/die.ogg"))
+		self.point = pg.mixer.Sound(os.path.join(base_path, "assets/audio/point.ogg"))
+		self.wing = pg.mixer.Sound(os.path.join(base_path, "assets/audio/wing.ogg"))
 		
 		# Velocity
 		self.vel = 0
