@@ -1,9 +1,12 @@
 import pygame as pg
 import random
 import config
+import os
 
 def load(image_name):
-	img = pg.image.load(f"assets/sprites/bird/{image_name}").convert_alpha()
+	base_path = os.path.dirname(os.path.abspath(__file__))
+	img_path = os.path.join(base_path, f"assets/sprites/bird/{image_name}")
+	img = pg.image.load(img_path).convert_alpha()
 	fx, fy = 6,6
 	iw, ih = config.scale.scaler(fx,fy,img.get_size())
 	img = pg.transform.scale(img, (iw,ih))

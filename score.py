@@ -1,9 +1,12 @@
 import pygame as pg
 import config
+import os
 
 def load_img(fx,fy,path):
 	fx, fy = fx,fy
-	img = pg.image.load(f"assets/sprites/score_board/{path}").convert_alpha()
+	base_path = os.path.dirname(os.path.abspath(__file__))
+	img_path = os.path.join(base_path, f"assets/sprites/score_board/{path}")
+	img = pg.image.load(img_path).convert_alpha()
 	img = pg.transform.scale(img, config.scale.scaler(fx,fy,img.get_size()))
 	return img
 
