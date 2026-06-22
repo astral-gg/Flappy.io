@@ -4,7 +4,7 @@ import random
 import os
 
 def load_img(path):
-	fx, fy = 5,5
+	fx, fy = 6,6
 	base_path = os.path.dirname(os.path.abspath(__file__))
 	img_path = os.path.join(base_path, f"assets/sprites/game_images/{path}") 
 	img = pg.image.load(img_path)

@@ -40,11 +40,12 @@ class Game():
 	
 	def level(self):
 		# Background
-		background = ScrollingLayer(pathA="background-day.png", pathB="background-night.png",x=0,y=-self.height*0.1,dx=1,background=True)
+		background = ScrollingLayer(pathA="background-day.png", pathB="background-night.png",x=0,y=-self.height*0.28,dx=1,background=True)
 		
 		# Pipe Group
 		pipe_gap = self.player.image.get_height() * 3
 		pipe_delay = 2300
+		
 		last_pipe_spawn = 0
 		pipe_group = pg.sprite.Group()
 		pipes = Pipes(pipe_gap, self.base.rect.y, self.player, self.pipe_base_dx)
@@ -104,7 +105,7 @@ class Game():
 					pipe_group.empty()
 					self.player.reset(self.player_pos)
 					Pipes.pipe_count = 0
-					background = ScrollingLayer(pathA="background-day.png", pathB="background-night.png",x=0,y=-self.height*0.1,dx=1,background=True)
+					background = ScrollingLayer(pathA="background-day.png", pathB="background-night.png",x=0,y=-self.height*0.28,dx=1,background=True)
 				
 			# Draw Logic
 			pipe_group.draw(self.display)
