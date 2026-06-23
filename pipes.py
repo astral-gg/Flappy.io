@@ -24,10 +24,10 @@ class Pipes(pg.sprite.Sprite):
 	@classmethod
 	def _cache_images(cls):
 		if cls._green_pipe is None:
-			cls._green_pipe = load_img("pipe-green.png").convert_alpha()
+			cls._green_pipe = load_img("pipe-green.png")
 			cls._green_pipe_inverted = pg.transform.flip(cls._green_pipe.copy(), False, True)
 			
-			cls._red_pipe = load_img("pipe-red.png").convert_alpha()
+			cls._red_pipe = load_img("pipe-red.png")
 			cls._red_pipe_inverted = pg.transform.flip(cls._red_pipe.copy(), False, True)
 	
 	def __init__(self, pipe_gap, ground, player, dx):
@@ -77,7 +77,7 @@ class Pipes(pg.sprite.Sprite):
 		# Movement Speed
 		self.dx = dx * config.scale.factor_x
 		
-		self.image = self.surface.convert_alpha()
+		self.image = self.surface.convert()
 		self.rect = self.surface_rect
 		
 		self.awarded = False

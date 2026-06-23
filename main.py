@@ -14,10 +14,15 @@ os.environ["PYGAME_BLEND_ALPHA_SDL2"] = "1"
 
 pg.init()
 
+font = pg.font.Font(size=43)
+def show_info(text, pos, screen):
+	_txt_surface = font.render(f"FPS: {text}", True, "white")
+	screen.blit(_txt_surface, pos)
+
 class Game():
 	
 	def __init__(self):
-		self.display = pg.display.set_mode((540,1080), pg.FULLSCREEN | pg.HWSURFACE | pg.DOUBLEBUF)
+		self.display = pg.display.set_mode((0,0), pg.FULLSCREEN)
 		self.width, self.height = self.display.get_size()
 		self.clock = pg.time.Clock()
 		
@@ -37,6 +42,9 @@ class Game():
 		# Player
 		self.player_pos = (int(self.width * 0.12), int(self.height//2))
 		self.player = Player(self.player_pos[0], self.player_pos[1], config.scale.factor_y, self.base.rect.y)
+		
+		# Game State Variables
+		self.start = False
 	
 	def level(self):
 		# Background
@@ -44,7 +52,9 @@ class Game():
 		
 		# Pipe Group
 		pipe_gap = self.player.image.get_height() * 3
-		pipe_delay = 2300
+		pipe_spawn_control_factor = 13
+		delta_pipe_spawn_control_factor = 10 * 1000
+		last_delta_pscf = 0
 		
 		last_pipe_spawn = 0
 		pipe_group = pg.sprite.Group()
@@ -53,18 +63,29 @@ class Game():
 		
 		# Game Loop
 		while True:
+			pipe_spawn_delay = (self.width / self.pipe_base_dx) * pipe_spawn_control_factor
 			self.display.fill((0,0,0))
 			self.clock.tick(config.fps)
 			background.draw()
 			
-			# Pipes
-			if pg.time.get_ticks() - last_pipe_spawn > pipe_delay:
-				pipes.generate_pipe(pipe_group, pipe_gap, self.base.rect.y, self.player, self.pipe_base_dx, pipes)
-				last_pipe_spawn = pg.time.get_ticks()
-			
-			elif len(pipe_group) == 0:
-				pipes.generate_pipe(pipe_group, pipe_gap, self.base.rect.y, self.player, self.pipe_base_dx, pipes)
-				last_pipe_spawn = pg.time.get_ticks()
+			# Pipes Spawn
+			# Spawn pipes only if game has started
+			if self.start:
+				if pg.time.get_ticks() - last_pipe_spawn > pipe_spawn_delay:
+					pipes.generate_pipe(pipe_group, pipe_gap, self.base.rect.y, self.player, self.pipe_base_dx, pipes)
+					last_pipe_spawn = pg.time.get_ticks()
+				
+				elif len(pipe_group) == 0:
+					pipes.generate_pipe(pipe_group, pipe_gap, self.base.rect.y, self.player, self.pipe_base_dx, pipes)
+					last_pipe_spawn = pg.time.get_ticks()
+				
+				if pg.time.get_ticks() - last_delta_pscf > delta_pipe_spawn_control_factor:
+					pipe_spawn_control_factor = max(10, pipe_spawn_control_factor-1)
+					last_delta_pscf = pg.time.get_ticks()
+					
+			# Update Player — If game has started
+			if self.start:
+				self.player.update()
 			
 			# Update — Only if player is alive
 			if self.player.alive:
@@ -97,6 +118,10 @@ class Game():
 				if event.type == pg.QUIT:
 					pg.quit()
 					sys.exit()
+				
+				if event.type == pg.FINGERDOWN and self.start == False:
+					self.start = True
+					self.global_start_time = pg.time.get_ticks()
 					
 				if event.type == pg.FINGERDOWN and self.player.alive:
 					self.player.flap = True
@@ -107,12 +132,15 @@ class Game():
 					pipe_group.empty()
 					self.player.reset(self.player_pos)
 					Pipes.pipe_count = 0
+					background.change_background()
+					pipe_spawn_control_factor = 13
+					self.start = False
 					
 			# Draw Logic
 			pipe_group.draw(self.display)
-			self.player.update()
 			self.player.draw(self.display)
 			self.base.draw()
+			show_info(self.clock.get_fps(), (0,0), self.display)
 			
 			pg.display.flip()
 

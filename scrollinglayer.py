@@ -23,19 +23,18 @@ class ScrollingLayer(pg.sprite.Sprite):
 			self.image = load_img(pathA).convert_alpha()
 			self.image2 = self.image.copy()
 		else:
-			path = random.choice([pathA, pathB])
-			self.image = load_img(path).convert_alpha()
+			self.imageA = load_img(pathA).convert()
+			self.imageB = load_img(pathB).convert()
+			
+			self.image = random.choice([self.imageA, self.imageB])
 			self.image2 = self.image.copy()
 			self.frame_counter = 0
 			self.max_frame = 12 # Update every 12 frames
 			
 		
 		# Common variables
-		if background:
-			self.dx = dx * config.scale.factor_x
-		else:
-			self.dx = dx * config.scale.factor_x
-			
+		self.dx = dx * config.scale.factor_x
+		
 		topleft_rect = (x,y)
 		topleft_rect2 = (self.screen_width,y)
 		self.rect = self.image.get_rect(topleft=topleft_rect)
@@ -51,6 +50,10 @@ class ScrollingLayer(pg.sprite.Sprite):
 			self.rect.left = self.rect2.x + self.image.get_width()
 		if self.rect2.right <= 0:
 			self.rect2.left = self.rect.x + self.image2.get_width()
+	
+	def change_background(self):
+		self.image = random.choice([self.imageA, self.imageB])
+		self.image2 = self.image.copy()
 	
 	def draw(self):
 		render = [(self.image, self.rect), (self.image2, self.rect2)]
