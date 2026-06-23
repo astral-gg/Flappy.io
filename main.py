@@ -14,7 +14,7 @@ os.environ["PYGAME_BLEND_ALPHA_SDL2"] = "1"
 
 pg.init()
 
-font = pg.font.Font(size=43)
+font = pg.font.Font(None, 43)
 def show_info(text, pos, screen):
 	_txt_surface = font.render(f"FPS: {text}", True, "white")
 	screen.blit(_txt_surface, pos)
@@ -61,6 +61,9 @@ class Game():
 		pipes = Pipes(pipe_gap, self.base.rect.y, self.player, self.pipe_base_dx)
 		#last_pipe_spawn = pg.time.get_ticks()
 		
+		increase_speed = 15 * 1000
+		last_increase_speed = 0
+		
 		# Game Loop
 		while True:
 			pipe_spawn_delay = (self.width / self.pipe_base_dx) * pipe_spawn_control_factor
@@ -82,6 +85,16 @@ class Game():
 				if pg.time.get_ticks() - last_delta_pscf > delta_pipe_spawn_control_factor:
 					pipe_spawn_control_factor = max(10, pipe_spawn_control_factor-1)
 					last_delta_pscf = pg.time.get_ticks()
+				
+				# Base and Pipe — Speed increase every 10 seconds
+				if pg.time.get_ticks() - last_increase_speed > increase_speed:
+					self.pipe_base_dx = min(self.pipe_base_dx + 0.2, 6)
+					self.base.dx = self.pipe_base_dx
+					
+					for pipe in pipe_group:
+						pipe.dx = self.pipe_base_dx
+						
+					last_increase_speed = pg.time.get_ticks()
 					
 			# Update Player — If game has started
 			if self.start:
@@ -135,6 +148,7 @@ class Game():
 					background.change_background()
 					pipe_spawn_control_factor = 13
 					self.start = False
+					self.pipe_base_dx = 5
 					
 			# Draw Logic
 			pipe_group.draw(self.display)

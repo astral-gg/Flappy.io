@@ -55,7 +55,7 @@ class Pipes(pg.sprite.Sprite):
 		self.gap_surface = pg.Surface((self.green_pipe.get_width(),pipe_gap)).convert()
 		self.gap_surface.fill("white")
 		self.gap_surface.set_colorkey("white")
-		self.gap_surface_rect = self.gap_surface.get_rect(topleft=(0,random.randint(pipe_gap//2, self.surface.get_height()-pipe_gap)))
+		self.gap_surface_rect = self.gap_surface.get_rect(topleft=(0,random.randint(pipe_gap, self.surface.get_height()-pipe_gap)))
 		
 		self.surface.blit(self.gap_surface, self.gap_surface_rect)
 		
