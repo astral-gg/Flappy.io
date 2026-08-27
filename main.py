@@ -132,14 +132,14 @@ class Game():
 					pg.quit()
 					sys.exit()
 				
-				if event.type == pg.FINGERDOWN and self.start == False:
+				if (event.type == pg.FINGERDOWN or event.type == pg.KEYDOWN) and self.start == False:
 					self.start = True
 					self.global_start_time = pg.time.get_ticks()
 					
-				if event.type == pg.FINGERDOWN and self.player.alive:
+				if (event.type == pg.FINGERDOWN or event.type == pg.KEYDOWN) and self.player.alive:
 					self.player.flap = True
 				
-				if event.type == pg.FINGERDOWN and self.player.touching_ground:
+				if (event.type == pg.FINGERDOWN or event.type == pg.KEYDOWN) and self.player.touching_ground:
 					self.display.fill("black")
 					print(self.player.score)
 					pipe_group.empty()
