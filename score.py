@@ -1,6 +1,7 @@
 import pygame as pg
 import config
 import os
+import json
 
 def load_img(fx,fy,path):
 	fx, fy = fx,fy
@@ -9,6 +10,24 @@ def load_img(fx,fy,path):
 	img = pg.image.load(img_path).convert_alpha()
 	img = pg.transform.scale(img, config.scale.scaler(fx,fy,img.get_size()))
 	return img
+
+def create_boards(score, images):
+	digits = [int(n) for n in str(score)]
+	
+	score_board = pg.Surface((images[0].get_width() * (len(digits) + 1), images[0].get_height()))
+	score_board.set_colorkey((0,0,0))
+	   
+	for idx in range(len(digits)):
+		num_img = images[int(digits[idx])]
+		y = score_board.get_height()//2
+		x = num_img.get_width() + score_board.get_width()//3 * idx
+	       
+		num_rect = num_img.get_rect()
+		num_rect.center = (x, y)
+	       
+		score_board.blit(num_img, num_rect)
+
+	return score_board
 
 class Score():
 	"""
@@ -23,10 +42,16 @@ class Score():
 		self.screen_width, self.screen_height = self.display.get_size()
 		
 		# Numbers
-		nfx, nfy = 1,1
-		numbers = {}
+		nfx, nfy = 5,5
+		self.numbers = []
 		for n in range(0,10):
-			numbers[f"{n}"] = load_img(nfx,nfy,f"numbers/{n}.png")
+			self.numbers.append(load_img(nfx,nfy,f"numbers/{n}.png"))
+		
+		# ScoreBoard - Numbers
+		nfx, nfy = 1,1
+		self.digits = []
+		for n in range(0,10):
+			self.digits.append(load_img(nfx,nfy,f"numbers/{n}.png"))
 			
 		# Player
 		self.player = player
@@ -35,26 +60,66 @@ class Score():
 		# ===================
 		# UNCOMMENT AFTER ADDING MEDALS AND BOARD
 		# ===================
-		#mfx,mfy = 7,7
-#		self.gold = load_img(mfx,mfy,"gold.png")
-#		self.silver = load_img(mfx,mfy,"silver.png")
-#		self.tin = load_img(mfx,mfy,"tin.png")
+		mfx,mfy = 9,9
+		self.gold = load_img(mfx,mfy,"gold_medal.png")
+		self.silver = load_img(mfx,mfy,"medal.png")
+		#self.tin = load_img(mfx,mfy,"tin.png")
 #		self.bronze = load_img(mfx,mfy,"bronze.png")
-#		
-#		# Score Board
-#		self.score_board = load_img(7,7,"score_board.png")
-#		self.score_board_rect = self.score_board.get_rect(center=(x,y))
+		
+		# Score Board
+		self.score_board = load_img(mfx,mfy,"score_board.png")
+		self.score_board_rect = self.score_board.get_rect(center=(x,y))
 	
-	#def draw_score_board(self):
-#		medal_rect = self.gold.get_rect()
-#		new_board = self.score_board.copy()
-#		
-#		medal_rect.centery = new_board.get_height() * 0.55
-#		medal_rect.centerx = new_board.get_height() * 0.45
-#		
-#		new_board.blit(self.gold, medal_rect)
-#		self.display.blit(new_board, self.score_board_rect)
+	def draw_score_board(self, prev_score):
+		# Retrieve Scores
+		current_score = self.player.score
+		best_score = prev_score
+		
+		# Make score display
+		current_score_display = create_boards(current_score, self.digits)
+		current_score_display_rect = current_score_display.get_rect()
+		current_score_display_rect.center = (self.score_board.get_width() * 0.8, self.score_board.get_height() * 0.35)
+		
+		best_score_display = create_boards(best_score, self.digits)
+		best_score_display_rect = best_score_display.get_rect()
+		best_score_display_rect.center = (self.score_board.get_width() * 0.8, self.score_board.get_height() * 0.7)
+		
+		medal_rect = self.gold.get_rect()
+		new_board = self.score_board.copy()
+		
+		medal_rect.centery = new_board.get_height() * 0.53
+		medal_rect.centerx = new_board.get_height() * 0.42
+		
+		# Blit on new_board
+		if current_score > best_score:
+			new_board.blit(self.gold, medal_rect)
+		else:
+			new_board.blit(self.silver, medal_rect)
+		
+		new_board.blit(current_score_display, current_score_display_rect)
+		new_board.blit(best_score_display, best_score_display_rect)
+			
+		self.display.blit(new_board, self.score_board_rect)
+		
+		if current_score > best_score:
+			self.save_score()
 	
 	def show_score(self):
-		player_score = f"{self.player.score}"
+		player_score = self.player.score
 		
+		numbers = self.numbers
+		
+		score_board = create_boards(player_score, numbers)
+		score_board_rect = score_board.get_rect()
+		score_board_rect.center = (self.screen_width * 0.5, self.screen_height * 0.15)
+		
+		self.display.blit(score_board, score_board_rect)
+	
+	def save_score(self):
+		with open("score.txt","w") as f:
+			f.write(f"{self.player.score}")
+	
+	def load_score(self):
+		with open("score.txt","r") as f:
+			score = f.read()
+			return int(score)

@@ -30,7 +30,7 @@ class Pipes(pg.sprite.Sprite):
 			cls._red_pipe = load_img("pipe-red.png")
 			cls._red_pipe_inverted = pg.transform.flip(cls._red_pipe.copy(), False, True)
 	
-	def __init__(self, pipe_gap, ground, player, dx):
+	def __init__(self, pipe_gap, ground, player, dx, last_pipe_gap_pos):
 		super().__init__()
 		
 		Pipes._cache_images()
@@ -55,7 +55,21 @@ class Pipes(pg.sprite.Sprite):
 		self.gap_surface = pg.Surface((self.green_pipe.get_width(),pipe_gap)).convert()
 		self.gap_surface.fill("white")
 		self.gap_surface.set_colorkey("white")
-		self.gap_surface_rect = self.gap_surface.get_rect(topleft=(0,random.randint(pipe_gap, self.surface.get_height()-pipe_gap)))
+		
+		if last_pipe_gap_pos == None:
+			self.y = random.randint(0, self.surface.get_height()-pipe_gap)
+		else:
+			new_pipe_pos = random.randint(last_pipe_gap_pos - pipe_gap, last_pipe_gap_pos + pipe_gap)
+			
+			if new_pipe_pos > self.surface.get_height()-pipe_gap:
+				new_pipe_pos = last_pipe_gap_pos - pipe_gap - random.randint(100,150)
+			
+			if new_pipe_pos < 0:
+				new_pipe_pos = last_pipe_gap_pos + pipe_gap + random.randint(100,150)
+				
+			self.y = new_pipe_pos
+			
+		self.gap_surface_rect = self.gap_surface.get_rect(topleft=(0,self.y))
 		
 		self.surface.blit(self.gap_surface, self.gap_surface_rect)
 		
@@ -95,6 +109,6 @@ class Pipes(pg.sprite.Sprite):
 		Pipes.pipe_count += 1
 			
 	@staticmethod
-	def generate_pipe(pipe_group, pipe_gap, ground, player, dx, pipe_instance):
+	def generate_pipe(pipe_group, pipe_gap, ground, player, dx, pipe_instance, last_pipe_gap_pos):
 		pipe_instance.add_pipe()
-		pipe_group.add(Pipes(pipe_gap, ground, player, dx))
+		pipe_group.add(Pipes(pipe_gap, ground, player, dx, last_pipe_gap_pos))

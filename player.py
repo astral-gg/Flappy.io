@@ -58,7 +58,9 @@ class Player(pg.sprite.Sprite):
 		self.hit = pg.mixer.Sound(os.path.join(base_path, "assets/audio/hit.ogg"))
 		self.die = pg.mixer.Sound(os.path.join(base_path, "assets/audio/die.ogg"))
 		self.point = pg.mixer.Sound(os.path.join(base_path, "assets/audio/point.ogg"))
+		self.point.set_volume(0.05)
 		self.wing = pg.mixer.Sound(os.path.join(base_path, "assets/audio/wing.ogg"))
+		self.wing.set_volume(0.10)
 		
 		# Velocity
 		self.vel = 0
@@ -93,10 +95,10 @@ class Player(pg.sprite.Sprite):
 	
 	def update(self):
 		if self.rect.bottom < self.ground:
-			self.vel += 0.5 * self.factor_y
+			self.vel += 0.86 * self.factor_y
 			
 			if self.flap:
-				self.vel = -12 * self.factor_y
+				self.vel = -16 * self.factor_y
 				self.wing.play()
 				self.flap = False
 			

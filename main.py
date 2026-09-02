@@ -34,7 +34,7 @@ class Game():
 		self.pause = False
 		
 		# Movement Speed for Base and Pipes
-		self.pipe_base_dx = 5
+		self.pipe_base_dx = 9
 		
 		# Base
 		self.base = ScrollingLayer("base.png", 0, self.height*0.80, dx=self.pipe_base_dx)
@@ -45,28 +45,34 @@ class Game():
 		
 		# Game State Variables
 		self.start = False
+		self.pause = False
+		
+		# Score
+		self.score = Score(self.player, self.width * 0.5, self.height * 0.6)
 	
 	def level(self):
 		# Background
 		background = ScrollingLayer(pathA="background-day.png", pathB="background-night.png",x=0,y=-self.height*0.28,dx=1,background=True)
 		
 		# Pipe Group
-		pipe_gap = self.player.image.get_height() * 3
-		pipe_spawn_control_factor = 13
-		delta_pipe_spawn_control_factor = 10 * 1000
-		last_delta_pscf = 0
+		pipe_gap = self.player.image.get_height()
+		pipe_gap = int(pipe_gap * 3) +1
+		pipe_spawn_delay = 1500
 		
 		last_pipe_spawn = 0
 		pipe_group = pg.sprite.Group()
-		pipes = Pipes(pipe_gap, self.base.rect.y, self.player, self.pipe_base_dx)
-		#last_pipe_spawn = pg.time.get_ticks()
+		pipes = Pipes(pipe_gap, self.base.rect.y, self.player, self.pipe_base_dx, None)
+		last_pipe_spawn = pg.time.get_ticks()
 		
-		increase_speed = 15 * 1000
-		last_increase_speed = 0
+		# Score
+		try:
+			prev_score = self.score.load_score()
+		except FileNotFoundError:
+			prev_score = 0
 		
 		# Game Loop
 		while True:
-			pipe_spawn_delay = (self.width / self.pipe_base_dx) * pipe_spawn_control_factor
+			#pipe_spawn_delay = (self.width / self.pipe_base_dx) * pipe_spawn_control_factor
 			self.display.fill((0,0,0))
 			self.clock.tick(config.fps)
 			background.draw()
@@ -74,28 +80,20 @@ class Game():
 			# Pipes Spawn
 			# Spawn pipes only if game has started
 			if self.start:
+				
+				if len(pipe_group) != 0:
+					last_pipe_gap_pos = pipe_group.sprites()[-1].y
+				else:
+					last_pipe_gap_pos = None
+					
 				if pg.time.get_ticks() - last_pipe_spawn > pipe_spawn_delay:
-					pipes.generate_pipe(pipe_group, pipe_gap, self.base.rect.y, self.player, self.pipe_base_dx, pipes)
+					pipes.generate_pipe(pipe_group, pipe_gap, self.base.rect.y, self.player, self.pipe_base_dx, pipes, last_pipe_gap_pos)
 					last_pipe_spawn = pg.time.get_ticks()
 				
 				elif len(pipe_group) == 0:
-					pipes.generate_pipe(pipe_group, pipe_gap, self.base.rect.y, self.player, self.pipe_base_dx, pipes)
+					pipes.generate_pipe(pipe_group, pipe_gap, self.base.rect.y, self.player, self.pipe_base_dx, pipes, last_pipe_gap_pos)
 					last_pipe_spawn = pg.time.get_ticks()
 				
-				if pg.time.get_ticks() - last_delta_pscf > delta_pipe_spawn_control_factor:
-					pipe_spawn_control_factor = max(10, pipe_spawn_control_factor-1)
-					last_delta_pscf = pg.time.get_ticks()
-				
-				# Base and Pipe — Speed increase every 10 seconds
-				if pg.time.get_ticks() - last_increase_speed > increase_speed:
-					self.pipe_base_dx = min(self.pipe_base_dx + 0.2, 6)
-					self.base.dx = self.pipe_base_dx
-					
-					for pipe in pipe_group:
-						pipe.dx = self.pipe_base_dx
-						
-					last_increase_speed = pg.time.get_ticks()
-					
 			# Update Player — If game has started
 			if self.start:
 				self.player.update()
@@ -104,7 +102,7 @@ class Game():
 			if self.player.alive:
 				pipe_group.update()
 				self.base.update()
-				background.update()
+				background.update()	
 			
 			if pipe_group and self.player.alive:
 				for pipe in pipe_group:
@@ -132,6 +130,10 @@ class Game():
 					pg.quit()
 					sys.exit()
 				
+				#if event.type == pg.FINGERDOWN:
+#					if event.y * self.height < self.height // 2 :
+#						self.pause = not self.pause
+				
 				if (event.type == pg.FINGERDOWN or event.type == pg.KEYDOWN) and self.start == False:
 					self.start = True
 					self.global_start_time = pg.time.get_ticks()
@@ -146,15 +148,25 @@ class Game():
 					self.player.reset(self.player_pos)
 					Pipes.pipe_count = 0
 					background.change_background()
-					pipe_spawn_control_factor = 13
 					self.start = False
-					self.pipe_base_dx = 5
+					
+					try:
+						prev_score = self.score.load_score()
+					except FileNotFoundError:
+						prev_score = 0
 					
 			# Draw Logic
 			pipe_group.draw(self.display)
 			self.player.draw(self.display)
 			self.base.draw()
-			show_info(self.clock.get_fps(), (0,0), self.display)
+			#show_info(int(self.clock.get_fps()), (0,0), self.display)
+			self.score.show_score()
+			
+			if not self.player.alive:
+				self.score.draw_score_board(prev_score)
+			
+			if self.pause:
+				continue
 			
 			pg.display.flip()
 
