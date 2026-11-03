@@ -10,7 +10,7 @@ from pipes import Pipes
 from scrollinglayer import ScrollingLayer
 from score import Score
 
-os.environ["PYGAME_BLEND_ALPHA_SDL2"] = "1"
+#os.environ["PYGAME_BLEND_ALPHA_SDL2"] = "1"
 
 pg.init()
 
@@ -22,6 +22,10 @@ def show_info(text, pos, screen):
 class Game():
 	
 	def __init__(self):
+		
+		# Version - Changes after major updates
+		self.version = 1.1
+		
 		self.display = pg.display.set_mode((0,0), pg.FULLSCREEN)
 		self.width, self.height = self.display.get_size()
 		self.clock = pg.time.Clock()
@@ -34,7 +38,8 @@ class Game():
 		self.pause = False
 		
 		# Movement Speed for Base and Pipes
-		self.pipe_base_dx = 9
+		#self.pipe_base_dx = 915
+		self.pipe_base_dx = 12
 		
 		# Base
 		self.base = ScrollingLayer("base.png", 0, self.height*0.80, dx=self.pipe_base_dx)
@@ -46,6 +51,7 @@ class Game():
 		# Game State Variables
 		self.start = False
 		self.pause = False
+		self.log_stats = True # Dont set true theres a bug in pipe generation. FIX IT!
 		
 		# Score
 		self.score = Score(self.player, self.width * 0.5, self.height * 0.6)
@@ -55,20 +61,27 @@ class Game():
 		background = ScrollingLayer(pathA="background-day.png", pathB="background-night.png",x=0,y=-self.height*0.28,dx=1,background=True)
 		
 		# Pipe Group
-		pipe_gap = self.player.image.get_height()
-		pipe_gap = int(pipe_gap * 3) +1
-		pipe_spawn_delay = 1500
+		pipe_gap = self.player.image.get_height() * 4
+		#pipe_spawn_delay = 950
+		pipe_spawn_delay = 1150
 		
 		last_pipe_spawn = 0
 		pipe_group = pg.sprite.Group()
 		pipes = Pipes(pipe_gap, self.base.rect.y, self.player, self.pipe_base_dx, None)
 		last_pipe_spawn = pg.time.get_ticks()
 		
+		# Stats
+		number_of_clicks = 0
+		death_cause = None
+		max_y = min_y = self.player.rect.y
+		
 		# Score
 		try:
 			prev_score = self.score.load_score()
 		except FileNotFoundError:
 			prev_score = 0
+		
+		last_score = 0
 		
 		# Game Loop
 		while True:
@@ -79,7 +92,7 @@ class Game():
 			
 			# Pipes Spawn
 			# Spawn pipes only if game has started
-			if self.start:
+			if self.start and self.player.alive:
 				
 				if len(pipe_group) != 0:
 					last_pipe_gap_pos = pipe_group.sprites()[-1].y
@@ -102,27 +115,37 @@ class Game():
 			if self.player.alive:
 				pipe_group.update()
 				self.base.update()
-				background.update()	
+				background.update()
+				
+				# Heights with respect to base
+				max_y = max(max_y, self.base.rect.y - self.player.rect.y)
+				min_y = min(min_y, self.base.rect.y - self.player.rect.y)
 			
+			# Collision Detection Logic
 			if pipe_group and self.player.alive:
 				for pipe in pipe_group:
 					if self.player.rect.colliderect(pipe.inverted_rect):
-						self.player.alive = False
+						death_cause = "Collided with Inverted pipe"
 						self.player.hit.play()
 						self.player.die.play()
 						pg.draw.rect(self.display, rect=pipe.inverted_rect, color="red")
+						self.player.alive = False
+						self.player.vel -= 9
 						
 					if self.player.rect.colliderect(pipe.normal_rect):
-						self.player.alive = False
+						death_cause = "Collided with Normal Pipe"
 						self.player.hit.play()
 						self.player.die.play()
 						pg.draw.rect(self.display, rect=pipe.normal_rect, color="red")
+						self.player.alive = False
+						self.player.vel -= 9
 					
 					if self.player.rect.left > pipe.gap_surface_rect.right and not pipe.awarded:
 						pipe.awarded = True
 						self.player.update_score()
 			
 			if self.player.rect.y < -self.player.image.get_height():
+				death_cause = "Flew out of screen"
 				self.player.alive = False
 			
 			for event in pg.event.get():
@@ -140,15 +163,24 @@ class Game():
 					
 				if (event.type == pg.FINGERDOWN or event.type == pg.KEYDOWN) and self.player.alive:
 					self.player.flap = True
+					number_of_clicks += 1
 				
 				if (event.type == pg.FINGERDOWN or event.type == pg.KEYDOWN) and self.player.touching_ground:
 					self.display.fill("black")
-					print(self.player.score)
 					pipe_group.empty()
-					self.player.reset(self.player_pos)
 					Pipes.pipe_count = 0
 					background.change_background()
 					self.start = False
+					
+					# Log stats
+					if self.log_stats:
+						self.score.log_statistics(death_cause, number_of_clicks-1, max_y, min_y, pg.time.get_ticks() - self.global_start_time, self.version)
+					
+					# Reset Stats & Player variables
+					number_of_clicks = 0
+					death_cause = None
+					self.player.reset(self.player_pos)
+					max_y = min_y = self.player.rect.y
 					
 					try:
 						prev_score = self.score.load_score()
@@ -159,9 +191,10 @@ class Game():
 			pipe_group.draw(self.display)
 			self.player.draw(self.display)
 			self.base.draw()
-			#show_info(int(self.clock.get_fps()), (0,0), self.display)
-			self.score.show_score()
-			
+			show_info(self.clock.get_fps(), (0,0), self.display)
+			if self.player.score != last_score:
+				self.score.show_score()
+				
 			if not self.player.alive:
 				self.score.draw_score_board(prev_score)
 			

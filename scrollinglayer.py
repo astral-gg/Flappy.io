@@ -7,7 +7,7 @@ def load_img(path):
 	fx, fy = 6,6
 	base_path = os.path.dirname(os.path.abspath(__file__))
 	img_path = os.path.join(base_path, f"assets/sprites/game_images/{path}") 
-	img = pg.image.load(img_path)
+	img = pg.image.load(img_path).convert()
 	img = pg.transform.scale(img, config.scale.scaler(fx,fy,img.get_size()))
 	
 	return img
@@ -20,7 +20,7 @@ class ScrollingLayer(pg.sprite.Sprite):
 		
 		if not background:
 			# Handles Base
-			self.image = load_img(pathA).convert_alpha()
+			self.image = load_img(pathA).convert()
 			self.image2 = self.image.copy()
 		else:
 			self.imageA = load_img(pathA).convert()
@@ -43,8 +43,8 @@ class ScrollingLayer(pg.sprite.Sprite):
 		self.background = background
 	
 	def update(self):
-		self.rect.x -= self.dx 
-		self.rect2.x -= self.dx 
+		self.rect.x -= self.dx
+		self.rect2.x -= self.dx
 			
 		if self.rect.right <= 0:
 			self.rect.left = self.rect2.x + self.image.get_width()
